@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models import Index
-
+from django.utils import timezone
 class Room(models.Model):
     room_id = models.CharField(max_length=10, primary_key=True)  
     room_name = models.CharField(max_length=60)  
@@ -22,6 +22,7 @@ class RoomUsers(models.Model):
     is_active = models.BooleanField(default=False)  
     user_name = models.CharField(max_length=30)  
     position = models.CharField(max_length=10)  
+    data_of_creation = models.DateTimeField(auto_now_add=True, null=True)
 
     class Meta:
         db_table = 'room_users'

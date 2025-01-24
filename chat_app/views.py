@@ -63,11 +63,12 @@ class GetRoomsView(APIView):
 
         room_data = []
         for room in rooms:
-            active_users_count = RoomUsers.objects.filter(fk_room_id=room, is_active=True).count()
+            active_users = RoomUsers.objects.filter(fk_room_id=room, is_active=True).order_by('-data_of_creation')
             room_data.append({
                 "room_id": room.room_id,
                 "room_name": room.room_name,
-                "active_users": active_users_count
+                "active_users": active_users.count(),
+                "users": [{"user_id":user.user_id , "user_name":user.user_name, "user_position": user.position} for user in active_users]
             })
 
         return Response({
