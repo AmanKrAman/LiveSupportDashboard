@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.db import IntegrityError
 from .models import Room , RoomUsers
 import uuid , re
+from websocket_app.socket_message import socket_message_manager
 
 def generate_unique_id(name):
     cleaned_name = name.replace(" ", "").lower()[:5]  
@@ -191,7 +192,10 @@ class DeleteRoomView(APIView):
         if user.position != 'ADMIN':
             return Response({"detail": "Only an admin can delete the room."}, status=status.HTTP_403_FORBIDDEN)
         
-        room.delete()  
+        socket_message_manager.clear_room_messages(room.room_id)
+        room.delete() 
+
+
         return Response({"detail": "Room and its associated users have been deleted successfully."}, status=status.HTTP_200_OK)
 
 
