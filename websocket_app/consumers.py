@@ -20,7 +20,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
         
-        self.room_name = is_user_in_room.fk_room_id.room_name
+        self.room_name = self.room_id + '__' + is_user_in_room.fk_room_id.room_name 
         self.room_group_name = self.room_name 
         await self.channel_layer.group_add(
             self.room_name,
@@ -33,6 +33,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
+
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
@@ -59,6 +60,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             "room_messages": event['room_messages']
         }))
+
+    async def close_room(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "room_closed",
+            "detail": "The room has been deleted by the admin."
+        }))
+        await self.close()
 
     @database_sync_to_async
     def check_user_in_room(self, room_id, user_id):

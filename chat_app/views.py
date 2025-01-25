@@ -4,7 +4,8 @@ from rest_framework.views import APIView
 from django.conf import settings
 from rest_framework import status
 from django.db.models import Q
-from django.db import IntegrityError
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from .models import Room , RoomUsers
 import uuid , re
 from websocket_app.socket_message import socket_message_manager
@@ -193,8 +194,16 @@ class DeleteRoomView(APIView):
         if user.position != 'ADMIN':
             return Response({"detail": "Only an admin can delete the room."}, status=status.HTTP_403_FORBIDDEN)
         
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            room.room_name,
+            {
+                "type": "close_room",
+                "detail": "Room deleted by admin.",
+            }
+        )
         socket_message_manager.clear_room_messages(room.room_id)
-        room.delete() 
+        room.delete()
 
 
         return Response({"detail": "Room and its associated users have been deleted successfully."}, status=status.HTTP_200_OK)
