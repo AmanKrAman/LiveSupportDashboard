@@ -6,7 +6,7 @@ class Room(models.Model):
     room_name = models.CharField(max_length=60)  
     room_created_by = models.CharField(max_length=10)  
     room_created_on = models.DateTimeField(auto_now_add=True) 
-    is_active = models.BooleanField(default=True)   
+    is_active = models.BooleanField(default=False)   
 
     class Meta:
         db_table = 'room'

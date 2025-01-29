@@ -64,7 +64,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def close_room(self, event):
         await self.send(text_data=json.dumps({
             "type": "room_closed",
-            "detail": "The room has been deleted by the admin."
+            "detail": event['detail'],
         }))
         await self.close()
 
@@ -73,7 +73,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return RoomUsers.objects.filter(
             fk_room_id=room_id,
             user_id=user_id,
-            is_active=True
+            is_active=True,
+            fk_room_id__is_active = True
         ).select_related('fk_room_id').first()
 
 

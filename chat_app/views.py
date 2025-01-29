@@ -56,11 +56,11 @@ class GetRoomsView(APIView):
 
         if input_data:
             if re.match(r'^[A-Za-z0-9]+$', input_data):
-                rooms = Room.objects.filter(room_id__icontains=input_data)
+                rooms = Room.objects.filter(room_id__icontains=input_data, is_active = True)
             else:
-                rooms = Room.objects.filter(room_name__icontains=input_data)
+                rooms = Room.objects.filter(room_name__icontains=input_data , is_active = True)
         else:
-            rooms = Room.objects.order_by('-room_created_on')[:5]
+            rooms = Room.objects.filter(is_active = True).order_by('-room_created_on')[:5]
 
         room_data = []
         for room in rooms:
@@ -170,7 +170,51 @@ class DisjoinRoomView(APIView):
             }
             return Response(response_data, status=status.HTTP_200_OK)
 
+class ToggleRoomView(APIView):
+    def post(self, request, *args, **kwargs):
 
+        room_id = request.data.get('room_id', '').strip()
+        input_data = request.data.get('user_id_or_name', '').strip()
+
+        if not room_id or not input_data:
+            return Response({"detail": "Both room_id and user_id_or_name must be provided."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        room = Room.objects.filter(room_id=room_id).first()
+        if not room:
+            return Response(
+                {"detail": f"Room with room_id {room_id} does not exist."}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        user_in_room = RoomUsers.objects.filter(fk_room_id=room, is_active=True).filter(Q(user_id=input_data) | Q(user_name=input_data)).first()
+
+        if not user_in_room:
+            return Response(
+                {"detail": f"User {input_data} is not part of the room."}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if user_in_room.position != 'ADMIN':
+            return Response({"detail": "Only an admin can toggle the room."}, status=status.HTTP_403_FORBIDDEN)
+        
+        room.is_active = not room.is_active
+        room.save()
+
+        if not room.is_active:
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                room.room_id + '__' + room.room_name,
+                {
+                    "type": "close_room", 
+                    "detail": "Room disabled by admin.", 
+                }
+            )
+        socket_message_manager.clear_room_messages(room.room_id)
+
+        return Response(
+            {"detail": f"Room {room_id} is now {'active' if room.is_active else 'inactive'}."}, 
+            status=status.HTTP_200_OK
+        )
 
 class DeleteRoomView(APIView):
     def post(self ,request, *args , **kwargs):
@@ -196,7 +240,7 @@ class DeleteRoomView(APIView):
         
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            room.room_name,
+            room.room_id + '__' + room.room_name,
             {
                 "type": "close_room",
                 "detail": "Room deleted by admin.",
