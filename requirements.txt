@@ -9,3 +9,4 @@ sockets
 channels
 channels-redis
 python-decouple
+confluent-kafka
