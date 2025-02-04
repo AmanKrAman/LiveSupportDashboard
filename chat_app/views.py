@@ -8,7 +8,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from .models import Room , RoomUsers
 import uuid , re
-from websocket_app.socket_message import socket_message_manager
+from websocket_app.kafka.consumer import ChatKafkaConsumer
 
 def generate_unique_id(name):
     cleaned_name = name.replace(" ", "").lower()[:5]  
@@ -209,7 +209,7 @@ class ToggleRoomView(APIView):
                     "detail": "Room disabled by admin.", 
                 }
             )
-        socket_message_manager.clear_room_messages(room.room_id)
+        ChatKafkaConsumer().clear_room_messages(room.room_id)
 
         return Response(
             {"detail": f"Room {room_id} is now {'active' if room.is_active else 'inactive'}."}, 
@@ -246,7 +246,7 @@ class DeleteRoomView(APIView):
                 "detail": "Room deleted by admin.",
             }
         )
-        socket_message_manager.clear_room_messages(room.room_id)
+        ChatKafkaConsumer().clear_room_messages(room.room_id)
         room.delete()
 
 

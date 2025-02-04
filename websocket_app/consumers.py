@@ -32,6 +32,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
         
+        self.user_name = is_user_in_room.user_name
         self.room_name = self.room_id + '__' + is_user_in_room.fk_room_id.room_name 
         self.room_group_name = self.room_name 
 
@@ -46,7 +47,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             type = 'user joined',
             room_id=self.room_id,
             user_id=self.user_id,
-            message=f'New user joined the team: {self.user_id}',
+            message=f'{self.user_name} joined the room',
             room_name=self.room_name.split('__')[1]
         )
 
