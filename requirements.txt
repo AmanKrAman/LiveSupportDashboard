@@ -9,4 +9,5 @@ sockets
 channels
 channels-redis
 python-decouple
-confluent-kafka
+confluent-kafka==2.3.0
+pika

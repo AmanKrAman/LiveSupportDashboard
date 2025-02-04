@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 from threading import Lock
 
 class SocketMessage:
@@ -15,7 +16,7 @@ class SocketMessage:
                     "messages": []
                 }
 
-            timestamp = time.time()
+            timestamp = datetime.now().isoformat()
             self._messages[room_id]["messages"].append({
                 'user_id': user_id,
                 'message': message,

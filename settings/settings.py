@@ -103,6 +103,11 @@ DATABASES = {
     }
 }
 
+KAFKA_SETTINGS = {
+    'bootstrap_servers': 'localhost:9092',
+    'auto_create_topics': True
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
