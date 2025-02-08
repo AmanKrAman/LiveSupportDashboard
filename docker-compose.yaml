@@ -29,3 +29,35 @@ services:
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
     depends_on:
       - kafka
+
+  db:
+    image: postgres:14
+    ports:
+      - "5433:5432" 
+    environment:
+      - POSTGRES_DB=live_support_db
+      - POSTGRES_USER=test_user
+      - POSTGRES_PASSWORD=test123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+
+  livesupport:
+    build: .
+    ports:
+      - "4004:4004"
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - DB_NAME=live_support_db
+      - DB_USER=test_user
+      - DB_PASSWORD=test123
+      - DB_HOST=db
+      - DB_PORT=5432
+    volumes:
+      - .:/app
+    depends_on:
+      - kafka
+      - db
+
+volumes:
+  postgres_data:
